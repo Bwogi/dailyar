@@ -22,20 +22,6 @@ export type Incident = {
   timeReported: string;
 };
 
-export type ActivityReport = {
-  _id?: string | ObjectId;
-  officerId: string;
-  officerName: string;
-  location: SecurityLocation; // Add this line
-  date: string;
-  shiftStart: string;
-  shiftEnd?: string;
-  equipment: Equipment;
-  incidents: Incident[];
-  responsibilities: string;
-  status: "active" | "completed";
-};
-
 export type SecurityLocation =
   | "Security Account Manager"
   | "CAL1-Badge Check"
@@ -49,3 +35,17 @@ export type SecurityLocation =
   | "CAL1-Receiving(North Gate)"
   | "CAL1-Shipping(South Gate)"
   | "CAL2-Supervisor";
+
+export type ActivityReport = {
+  _id?: ObjectId;
+  officerId: string;
+  officerName: string;
+  location: SecurityLocation;
+  date: string;
+  shiftStart: string;
+  shiftEnd?: string;
+  equipment: Equipment;
+  incidents: Incident[];
+  responsibilities: string;
+  status: "active" | "completed";
+};

@@ -1,7 +1,24 @@
 import { NextResponse } from "next/server";
 import clientPromise from "../../lib/mongodb";
 import { ActivityReport } from "@/app/types/types";
-import { ObjectId } from "mongodb";
+import { Filter, Document, WithId, ObjectId } from "mongodb";
+
+type ActivityReportDocument = WithId<Document> & Omit<ActivityReport, "_id">;
+
+// interface DateQuery {
+//   $gte?: Date;
+//   $lte?: Date;
+// }
+
+// interface ReportQuery {
+//   date?: DateQuery;
+//   $or?: Array<{
+//     [key in "officerName" | "officerId" | "location"]?: {
+//       $regex: string;
+//       $options: string;
+//     };
+//   }>;
+// }
 
 export async function POST(request: Request) {
   try {
@@ -95,6 +112,41 @@ export async function PUT(request: Request) {
         error:
           error instanceof Error ? error.message : "Failed to update report",
       },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    console.log("Search params:", Object.fromEntries(searchParams.entries()));
+
+    const client = await clientPromise;
+    const db = client.db("security");
+    const collection = db.collection<ActivityReportDocument>("reports");
+
+    const query: Filter<ActivityReportDocument> = {};
+    // ... build query ...
+    console.log("MongoDB query:", JSON.stringify(query, null, 2));
+
+    const reports = await collection
+      .find(query)
+      .sort({ shiftStart: -1 })
+      .toArray();
+
+    console.log(`Found ${reports.length} reports`);
+
+    const serializedReports = reports.map((report) => ({
+      ...report,
+      _id: report._id.toString(),
+    }));
+
+    return NextResponse.json(serializedReports);
+  } catch (error) {
+    console.error("Error in /api/reports:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch reports" },
       { status: 500 }
     );
   }
