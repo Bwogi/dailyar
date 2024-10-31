@@ -14,16 +14,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ActivityReport, Equipment, Incident } from "@/app/types/types";
+import {
+  ActivityReport,
+  Equipment,
+  Incident,
+  SecurityLocation,
+} from "@/app/types/types";
 
 type ReportState = Omit<ActivityReport, "_id"> & {
   savedId?: string;
 };
 
+const SECURITY_LOCATIONS: SecurityLocation[] = [
+  "Security Account Manager",
+  "CAL1-Badge Check",
+  "CAL1-Bag Check",
+  "CAL1-Rear Entrance",
+  "CAL1-Receiving(East Gate)",
+  "CAL1-Shipping(West Gate)",
+  "CAL1-Supervisor",
+  "CAL2-Badge Check",
+  "CAL2-Bag Check",
+  "CAL1-Receiving(North Gate)",
+  "CAL1-Shipping(South Gate)",
+  "CAL2-Supervisor",
+];
+
 export default function NewReportForm() {
   const [report, setReport] = useState<ReportState>({
     officerId: "",
     officerName: "",
+    location: "" as SecurityLocation,
     date: new Date().toISOString().split("T")[0],
     equipment: {
       keys: false,
@@ -46,12 +67,39 @@ export default function NewReportForm() {
     timeReported: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateStartDuty = () => {
+    // Validate officer information
+    if (!report.officerId.trim()) return "Officer ID is required";
+    if (!report.officerName.trim()) return "Officer Name is required";
+    if (!report.location) return "Security Post Location is required";
+
+    // Validate equipment checklist
+    const hasEquipment = Object.values(report.equipment).some(
+      (value) => value === true
+    );
+    if (!hasEquipment) return "At least one equipment item must be checked";
+
+    return null;
+  };
+
   const startDuty = async () => {
+    const validationError = validateStartDuty();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
     const updatedReport = {
       ...report,
       shiftStart: new Date().toISOString(),
+      status: "active" as const,
     };
-    setReport(updatedReport);
 
     try {
       const response = await fetch("/api/reports", {
@@ -59,16 +107,23 @@ export default function NewReportForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ report: updatedReport }),
       });
-      const data = await response.json();
-      if (!data.success) throw new Error("Failed to start duty");
 
-      // Save the ID returned from the server
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to start duty");
+      }
+
       setReport((prev) => ({
         ...prev,
+        ...updatedReport,
         savedId: data.id,
       }));
     } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to start duty");
       console.error("Error starting duty:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,6 +186,11 @@ export default function NewReportForm() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-4">
+          {error}
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Officer Information</CardTitle>
@@ -138,11 +198,13 @@ export default function NewReportForm() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              placeholder="Officer ID - Your Badge ID"
+              placeholder="Officer ID"
               value={report.officerId}
               onChange={(e) =>
                 setReport({ ...report, officerId: e.target.value })
               }
+              disabled={!!report.savedId || isSubmitting}
+              required
             />
             <Input
               placeholder="Officer Name"
@@ -150,21 +212,33 @@ export default function NewReportForm() {
               onChange={(e) =>
                 setReport({ ...report, officerName: e.target.value })
               }
+              disabled={!!report.savedId || isSubmitting}
+              required
             />
-          </div>
-          <div className="flex gap-4">
-            {!report.savedId ? (
-              <Button onClick={startDuty} disabled={!!report.shiftStart}>
-                Start Duty
-              </Button>
-            ) : (
-              <Button
-                onClick={endDuty}
-                disabled={report.status === "completed"}
+            <div className="col-span-2">
+              <Select
+                value={report.location}
+                onValueChange={(value: SecurityLocation) =>
+                  setReport({ ...report, location: value })
+                }
+                disabled={!!report.savedId || isSubmitting}
               >
-                End Duty
-              </Button>
-            )}
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Security Post Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SECURITY_LOCATIONS.map((location) => (
+                    <SelectItem
+                      key={location}
+                      value={location}
+                      className="cursor-pointer"
+                    >
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -185,8 +259,14 @@ export default function NewReportForm() {
                   onCheckedChange={(checked) =>
                     updateEquipment(item as keyof Equipment, checked as boolean)
                   }
+                  disabled={!!report.savedId || isSubmitting}
                 />
-                <label htmlFor={item} className="capitalize">
+                <label
+                  htmlFor={item}
+                  className={`capitalize ${
+                    !!report.savedId || isSubmitting ? "opacity-50" : ""
+                  }`}
+                >
                   {item.replace(/([A-Z])/g, " $1").trim()}
                 </label>
               </div>
@@ -196,7 +276,27 @@ export default function NewReportForm() {
             placeholder="Other equipment (specify)"
             value={report.equipment?.other || ""}
             onChange={(e) => updateEquipment("other", e.target.value)}
+            disabled={!!report.savedId || isSubmitting}
           />
+          <div className="flex gap-4">
+            {!report.savedId ? (
+              <Button
+                onClick={startDuty}
+                disabled={isSubmitting || !!report.shiftStart}
+                className="mt-4"
+              >
+                {isSubmitting ? "Starting Duty..." : "Start Duty"}
+              </Button>
+            ) : (
+              <Button
+                onClick={endDuty}
+                disabled={report.status === "completed"}
+                className="mt-4"
+              >
+                End Duty
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
