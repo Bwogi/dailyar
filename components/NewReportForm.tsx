@@ -69,14 +69,13 @@ export default function NewReportForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const validateStartDuty = () => {
-    // Validate officer information
     if (!report.officerId.trim()) return "Officer ID is required";
     if (!report.officerName.trim()) return "Officer Name is required";
     if (!report.location) return "Security Post Location is required";
 
-    // Validate equipment checklist
     const hasEquipment = Object.values(report.equipment).some(
       (value) => value === true
     );
@@ -119,6 +118,8 @@ export default function NewReportForm() {
         ...updatedReport,
         savedId: data.id,
       }));
+
+      setSuccessMessage("Duty started successfully");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to start duty");
       console.error("Error starting duty:", error);
@@ -127,18 +128,46 @@ export default function NewReportForm() {
     }
   };
 
+  const validateEndDuty = () => {
+    if (!report.responsibilities.trim()) {
+      return "Shift responsibilities are required before ending duty";
+    }
+
+    if (report.incidents.length > 0) {
+      const incompleteIncidents = report.incidents.some(
+        (incident) =>
+          !incident.description ||
+          !incident.actionTaken ||
+          !incident.timeReported
+      );
+      if (incompleteIncidents) {
+        return "All incidents must have complete information";
+      }
+    }
+
+    return null;
+  };
+
   const endDuty = async () => {
-    if (!report.savedId) {
-      console.error("No report ID found");
+    const validationError = validateEndDuty();
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
+    if (!report.savedId) {
+      setError("No active duty found");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
 
     const updatedReport = {
       ...report,
       shiftEnd: new Date().toISOString(),
       status: "completed" as const,
     };
-    setReport(updatedReport);
 
     try {
       const response = await fetch("/api/reports", {
@@ -149,18 +178,40 @@ export default function NewReportForm() {
           updates: {
             shiftEnd: updatedReport.shiftEnd,
             status: "completed",
+            incidents: report.incidents,
+            responsibilities: report.responsibilities,
           },
         }),
       });
+
       const data = await response.json();
-      if (!data.success) throw new Error("Failed to end duty");
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to end duty");
+      }
+
+      setReport((prev) => ({
+        ...prev,
+        ...updatedReport,
+      }));
+
+      setSuccessMessage(
+        "Duty ended successfully. All records have been saved."
+      );
     } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to end duty");
       console.error("Error ending duty:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const addIncident = () => {
-    if (newIncident.description && newIncident.actionTaken) {
+    if (
+      newIncident.description &&
+      newIncident.actionTaken &&
+      newIncident.timeReported
+    ) {
       setReport((prev) => ({
         ...prev,
         incidents: [...(prev.incidents || []), newIncident as Incident],
@@ -191,6 +242,13 @@ export default function NewReportForm() {
           {error}
         </div>
       )}
+
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 mb-4">
+          {successMessage}
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Officer Information</CardTitle>
@@ -198,7 +256,7 @@ export default function NewReportForm() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              placeholder="Officer ID - Badge ID"
+              placeholder="Officer ID"
               value={report.officerId}
               onChange={(e) =>
                 setReport({ ...report, officerId: e.target.value })
@@ -290,10 +348,10 @@ export default function NewReportForm() {
             ) : (
               <Button
                 onClick={endDuty}
-                disabled={report.status === "completed"}
+                disabled={report.status === "completed" || isSubmitting}
                 className="mt-4"
               >
-                End Duty
+                {isSubmitting ? "Ending Duty..." : "End Duty"}
               </Button>
             )}
           </div>
@@ -313,6 +371,7 @@ export default function NewReportForm() {
                   type: value as Incident["type"],
                 })
               }
+              disabled={report.status === "completed" || isSubmitting}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select incident type" />
@@ -334,6 +393,8 @@ export default function NewReportForm() {
               onChange={(e) =>
                 setNewIncident({ ...newIncident, timeReported: e.target.value })
               }
+              disabled={report.status === "completed" || isSubmitting}
+              required
             />
             <Textarea
               placeholder="Incident description"
@@ -341,6 +402,8 @@ export default function NewReportForm() {
               onChange={(e) =>
                 setNewIncident({ ...newIncident, description: e.target.value })
               }
+              disabled={report.status === "completed" || isSubmitting}
+              required
             />
             <Textarea
               placeholder="Action taken"
@@ -348,8 +411,21 @@ export default function NewReportForm() {
               onChange={(e) =>
                 setNewIncident({ ...newIncident, actionTaken: e.target.value })
               }
+              disabled={report.status === "completed" || isSubmitting}
+              required
             />
-            <Button onClick={addIncident}>Add Incident</Button>
+            <Button
+              onClick={addIncident}
+              disabled={
+                report.status === "completed" ||
+                isSubmitting ||
+                !newIncident.description ||
+                !newIncident.actionTaken ||
+                !newIncident.timeReported
+              }
+            >
+              Add Incident
+            </Button>
           </div>
 
           <div className="mt-4">
@@ -377,6 +453,8 @@ export default function NewReportForm() {
               setReport({ ...report, responsibilities: e.target.value })
             }
             className="min-h-[200px]"
+            disabled={report.status === "completed" || isSubmitting}
+            required
           />
         </CardContent>
       </Card>
