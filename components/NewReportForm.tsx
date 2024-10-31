@@ -256,7 +256,7 @@ export default function NewReportForm() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              placeholder="Officer ID"
+              placeholder="Officer ID - Your Badge Number"
               value={report.officerId}
               onChange={(e) =>
                 setReport({ ...report, officerId: e.target.value })
@@ -360,102 +360,160 @@ export default function NewReportForm() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Incident Reports</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Incident Reports
+            {!report.savedId && (
+              <span className="text-sm text-muted-foreground font-normal">
+                Start duty to report incidents
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <Select
-              onValueChange={(value) =>
-                setNewIncident({
-                  ...newIncident,
-                  type: value as Incident["type"],
-                })
-              }
-              disabled={report.status === "completed" || isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select incident type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fire">Fire</SelectItem>
-                <SelectItem value="employeeTermination">
-                  Employee Termination
-                </SelectItem>
-                <SelectItem value="falseAlarm">False Alarm</SelectItem>
-                <SelectItem value="propertyDamage">Property Damage</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Time reported"
-              type="datetime-local"
-              value={newIncident.timeReported}
-              onChange={(e) =>
-                setNewIncident({ ...newIncident, timeReported: e.target.value })
-              }
-              disabled={report.status === "completed" || isSubmitting}
-              required
-            />
-            <Textarea
-              placeholder="Incident description"
-              value={newIncident.description}
-              onChange={(e) =>
-                setNewIncident({ ...newIncident, description: e.target.value })
-              }
-              disabled={report.status === "completed" || isSubmitting}
-              required
-            />
-            <Textarea
-              placeholder="Action taken"
-              value={newIncident.actionTaken}
-              onChange={(e) =>
-                setNewIncident({ ...newIncident, actionTaken: e.target.value })
-              }
-              disabled={report.status === "completed" || isSubmitting}
-              required
-            />
-            <Button
-              onClick={addIncident}
-              disabled={
-                report.status === "completed" ||
-                isSubmitting ||
-                !newIncident.description ||
-                !newIncident.actionTaken ||
-                !newIncident.timeReported
-              }
-            >
-              Add Incident
-            </Button>
-          </div>
-
-          <div className="mt-4">
-            {report.incidents?.map((incident, index) => (
-              <div key={index} className="border p-4 rounded-lg mb-2">
-                <p className="font-bold capitalize">{incident.type}</p>
-                <p>Time: {new Date(incident.timeReported).toLocaleString()}</p>
-                <p>Description: {incident.description}</p>
-                <p>Action Taken: {incident.actionTaken}</p>
+          {!report.savedId ? (
+            <div className="text-center py-6 text-muted-foreground bg-muted/50 rounded-lg">
+              You must start your duty before reporting incidents
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4">
+                <Select
+                  onValueChange={(value) =>
+                    setNewIncident({
+                      ...newIncident,
+                      type: value as Incident["type"],
+                    })
+                  }
+                  disabled={report.status === "completed" || isSubmitting}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select incident type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fire">Fire</SelectItem>
+                    <SelectItem value="employeeTermination">
+                      Employee Termination
+                    </SelectItem>
+                    <SelectItem value="falseAlarm">False Alarm</SelectItem>
+                    <SelectItem value="propertyDamage">
+                      Property Damage
+                    </SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  placeholder="Time reported"
+                  type="datetime-local"
+                  value={newIncident.timeReported}
+                  onChange={(e) =>
+                    setNewIncident({
+                      ...newIncident,
+                      timeReported: e.target.value,
+                    })
+                  }
+                  disabled={report.status === "completed" || isSubmitting}
+                  required
+                />
+                <Textarea
+                  placeholder="Incident description"
+                  value={newIncident.description}
+                  onChange={(e) =>
+                    setNewIncident({
+                      ...newIncident,
+                      description: e.target.value,
+                    })
+                  }
+                  disabled={report.status === "completed" || isSubmitting}
+                  required
+                />
+                <Textarea
+                  placeholder="Action taken"
+                  value={newIncident.actionTaken}
+                  onChange={(e) =>
+                    setNewIncident({
+                      ...newIncident,
+                      actionTaken: e.target.value,
+                    })
+                  }
+                  disabled={report.status === "completed" || isSubmitting}
+                  required
+                />
+                <Button
+                  onClick={addIncident}
+                  disabled={
+                    report.status === "completed" ||
+                    isSubmitting ||
+                    !newIncident.description ||
+                    !newIncident.actionTaken ||
+                    !newIncident.timeReported
+                  }
+                >
+                  Add Incident
+                </Button>
               </div>
-            ))}
-          </div>
+
+              {report.incidents.length > 0 ? (
+                <div className="mt-4 space-y-4">
+                  {report.incidents.map((incident, index) => (
+                    <div
+                      key={index}
+                      className="border p-4 rounded-lg bg-background"
+                    >
+                      <p className="font-bold capitalize">{incident.type}</p>
+                      <p>
+                        Time: {new Date(incident.timeReported).toLocaleString()}
+                      </p>
+                      <p className="mt-2">
+                        <span className="font-medium">Description:</span>
+                        <br />
+                        {incident.description}
+                      </p>
+                      <p className="mt-2">
+                        <span className="font-medium">Action Taken:</span>
+                        <br />
+                        {incident.actionTaken}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No incidents reported
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Shift Responsibilities</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Shift Responsibilities
+            {!report.savedId && (
+              <span className="text-sm text-muted-foreground font-normal">
+                Start duty to log responsibilities
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Textarea
-            placeholder="Enter your responsibilities and activities during the shift"
-            value={report.responsibilities}
-            onChange={(e) =>
-              setReport({ ...report, responsibilities: e.target.value })
-            }
-            className="min-h-[200px]"
-            disabled={report.status === "completed" || isSubmitting}
-            required
-          />
+          {!report.savedId ? (
+            <div className="text-center py-6 text-muted-foreground bg-muted/50 rounded-lg">
+              You must start your duty before logging responsibilities
+            </div>
+          ) : (
+            <Textarea
+              placeholder="Enter your responsibilities and activities during the shift"
+              value={report.responsibilities}
+              onChange={(e) =>
+                setReport({ ...report, responsibilities: e.target.value })
+              }
+              className="min-h-[200px]"
+              disabled={report.status === "completed" || isSubmitting}
+              required
+            />
+          )}
         </CardContent>
       </Card>
     </div>
