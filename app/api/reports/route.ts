@@ -120,15 +120,43 @@ export async function PUT(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    console.log("Search params:", Object.fromEntries(searchParams.entries()));
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const search = searchParams.get("search");
 
     const client = await clientPromise;
     const db = client.db("security");
     const collection = db.collection<ActivityReportDocument>("reports");
 
     const query: Filter<ActivityReportDocument> = {};
-    // ... build query ...
-    console.log("MongoDB query:", JSON.stringify(query, null, 2));
+
+    // Add date range filter
+    if (startDate || endDate) {
+      query.shiftStart = {};
+      if (startDate) {
+        query.shiftStart = {
+          ...query.shiftStart,
+          $gte: startDate,
+        };
+      }
+      if (endDate) {
+        query.shiftStart = {
+          ...query.shiftStart,
+          $lte: endDate,
+        };
+      }
+    }
+
+    // Add search filter
+    if (search) {
+      query.$or = [
+        { officerName: { $regex: search, $options: "i" } },
+        { officerId: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    console.log("MongoDB Query:", JSON.stringify(query, null, 2));
 
     const reports = await collection
       .find(query)

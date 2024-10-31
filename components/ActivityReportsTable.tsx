@@ -1,3 +1,4 @@
+// components/ActivityReportsTable.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -47,7 +48,7 @@ export default function ActivityReportsTable() {
       const params = new URLSearchParams();
       if (startDate) params.append("startDate", startDate.toISOString());
       if (endDate) params.append("endDate", endDate.toISOString());
-      if (searchTerm) params.append("search", searchTerm);
+      if (searchTerm.trim()) params.append("search", searchTerm.trim());
 
       const response = await fetch(`/api/reports?${params.toString()}`);
       if (!response.ok) {
@@ -55,7 +56,7 @@ export default function ActivityReportsTable() {
       }
 
       const data = await response.json();
-      console.log("Loaded reports:", data); // Debug log
+      console.log("Loaded reports:", data);
       setReports(data);
     } catch (err) {
       console.error("Error loading reports:", err);
@@ -63,11 +64,11 @@ export default function ActivityReportsTable() {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, searchTerm]); // Add dependencies for the callback
+  }, [startDate, endDate, searchTerm]);
 
   useEffect(() => {
     loadReports();
-  }, [loadReports]); // Run once when component mounts
+  }, [loadReports]);
 
   return (
     <div className="space-y-4">
@@ -117,11 +118,16 @@ export default function ActivityReportsTable() {
               placeholder="Search by officer name, ID, or location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  loadReports();
+                }
+              }}
               className="pl-8"
             />
           </div>
           <Button onClick={loadReports} disabled={loading}>
-            {loading ? "Loading..." : "Search"}
+            {loading ? "Searching..." : "Search"}
           </Button>
         </div>
       </div>
