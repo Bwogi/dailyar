@@ -198,7 +198,7 @@ export default function NewReportForm() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
-              placeholder="Officer ID"
+              placeholder="Officer ID - Badge ID"
               value={report.officerId}
               onChange={(e) =>
                 setReport({ ...report, officerId: e.target.value })
