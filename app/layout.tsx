@@ -1,12 +1,15 @@
+// app/layout.tsx
 import type { Metadata } from "next";
-// import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "../components/theme-provider";
-import { Navbar } from "../components/Navbar";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/Navbar";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Guard Daily Activity Report",
-  description: "A daily activity report for security guards",
+  title: "Security Activity Reports",
+  description: "Security officer activity reporting system",
 };
 
 export default function RootLayout({
@@ -16,15 +19,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </div>
         </ThemeProvider>
       </body>
     </html>

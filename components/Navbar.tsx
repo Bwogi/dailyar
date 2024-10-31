@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ThemeToggle } from "../components/theme-toggle";
 
 export function Navbar() {
@@ -5,7 +6,9 @@ export function Navbar() {
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
         <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-semibold">Security Activity Reports</h2>
+          <Link href="/">
+            <h2 className="text-lg">Daily Activity Reports</h2>
+          </Link>
         </div>
         <div className="ml-auto flex items-center space-x-4">
           <ThemeToggle />
