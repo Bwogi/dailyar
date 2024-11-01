@@ -71,18 +71,19 @@ export default function ActivityReportsTable() {
   }, [loadReports]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-end">
-        {/* Date Range Filter */}
-        <div className="flex gap-2">
+    <div className="space-y-4 p-4">
+      {/* Filters Section */}
+      <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:items-end lg:space-x-4">
+        {/* Date Filters */}
+        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[160px]">
+              <Button variant="outline" className="w-full sm:w-[160px]">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {startDate ? format(startDate, "PP") : "Start date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={startDate}
@@ -94,12 +95,12 @@ export default function ActivityReportsTable() {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[160px]">
+              <Button variant="outline" className="w-full sm:w-[160px]">
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {endDate ? format(endDate, "PP") : "End date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={endDate}
@@ -111,7 +112,7 @@ export default function ActivityReportsTable() {
         </div>
 
         {/* Search Bar */}
-        <div className="flex gap-2 flex-1">
+        <div className="flex flex-1 space-x-2">
           <div className="relative flex-1">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -138,181 +139,204 @@ export default function ActivityReportsTable() {
         </div>
       )}
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Officer Name</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Start Time</TableHead>
-              <TableHead>End Time</TableHead>
-              <TableHead>Incidents</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reports.length === 0 ? (
+      {/* Responsive Table */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  {loading ? "Loading reports..." : "No reports found"}
-                </TableCell>
+                <TableHead className="whitespace-nowrap">Date</TableHead>
+                <TableHead className="whitespace-nowrap">
+                  Officer Name
+                </TableHead>
+                <TableHead className="whitespace-nowrap">Location</TableHead>
+                <TableHead className="whitespace-nowrap">Start Time</TableHead>
+                <TableHead className="whitespace-nowrap hidden md:table-cell">
+                  End Time
+                </TableHead>
+                <TableHead className="whitespace-nowrap hidden sm:table-cell">
+                  Incidents
+                </TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ) : (
-              reports.map((report) => (
-                <TableRow key={report._id?.toString()}>
-                  <TableCell>{format(new Date(report.date), "PP")}</TableCell>
-                  <TableCell>{report.officerName}</TableCell>
-                  <TableCell>{report.location}</TableCell>
-                  <TableCell>
-                    {format(new Date(report.shiftStart), "pp")}
+            </TableHeader>
+            <TableBody>
+              {reports.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    {loading ? "Loading reports..." : "No reports found"}
                   </TableCell>
-                  <TableCell>
-                    {report.shiftEnd
-                      ? format(new Date(report.shiftEnd), "pp")
-                      : "-"}
-                  </TableCell>
-                  <TableCell>{report.incidents.length}</TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedReport(report)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      {selectedReport && (
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Activity Report Details</DialogTitle>
-                            <DialogDescription>
-                              Report for {selectedReport.officerName} on{" "}
-                              {format(new Date(selectedReport.date), "PP")}
-                            </DialogDescription>
-                          </DialogHeader>
+                </TableRow>
+              ) : (
+                reports.map((report) => (
+                  <TableRow key={report._id?.toString()}>
+                    <TableCell className="whitespace-nowrap">
+                      {format(new Date(report.date), "PP")}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {report.officerName}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {report.location}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {format(new Date(report.shiftStart), "pp")}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap hidden md:table-cell">
+                      {report.shiftEnd
+                        ? format(new Date(report.shiftEnd), "pp")
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {report.incidents.length}
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedReport(report)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        {selectedReport && (
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto sm:max-h-[85vh]">
+                            <DialogHeader>
+                              <DialogTitle>Activity Report Details</DialogTitle>
+                              <DialogDescription>
+                                Report for {selectedReport.officerName} on{" "}
+                                {format(new Date(selectedReport.date), "PP")}
+                              </DialogDescription>
+                            </DialogHeader>
 
-                          <div className="space-y-4">
-                            {/* Basic Information */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <h4 className="font-medium">Officer ID</h4>
-                                <p>{selectedReport.officerId}</p>
+                            <div className="space-y-4">
+                              {/* Basic Information */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="font-medium">Officer ID</h4>
+                                  <p>{selectedReport.officerId}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">Location</h4>
+                                  <p className="break-words">
+                                    {selectedReport.location}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">Start Time</h4>
+                                  <p>
+                                    {format(
+                                      new Date(selectedReport.shiftStart),
+                                      "pp"
+                                    )}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">End Time</h4>
+                                  <p>
+                                    {selectedReport.shiftEnd
+                                      ? format(
+                                          new Date(selectedReport.shiftEnd),
+                                          "pp"
+                                        )
+                                      : "-"}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <h4 className="font-medium">Location</h4>
-                                <p>{selectedReport.location}</p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium">Start Time</h4>
-                                <p>
-                                  {format(
-                                    new Date(selectedReport.shiftStart),
-                                    "pp"
-                                  )}
-                                </p>
-                              </div>
-                              <div>
-                                <h4 className="font-medium">End Time</h4>
-                                <p>
-                                  {selectedReport.shiftEnd
-                                    ? format(
-                                        new Date(selectedReport.shiftEnd),
-                                        "pp"
-                                      )
-                                    : "-"}
-                                </p>
-                              </div>
-                            </div>
 
-                            {/* Equipment */}
-                            <div>
-                              <h4 className="font-medium mb-2">Equipment</h4>
-                              <div className="grid grid-cols-2 gap-2">
-                                {Object.entries(selectedReport.equipment).map(
-                                  ([key, value]) => (
-                                    <div
-                                      key={key}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <span
-                                        className={
-                                          value
-                                            ? "text-green-600"
-                                            : "text-red-600"
-                                        }
-                                      >
-                                        {value ? "✓" : "✗"}
-                                      </span>
-                                      <span className="capitalize">
-                                        {key.replace(/([A-Z])/g, " $1").trim()}
-                                      </span>
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Incidents */}
-                            {selectedReport.incidents.length > 0 && (
+                              {/* Equipment */}
                               <div>
-                                <h4 className="font-medium mb-2">Incidents</h4>
-                                <div className="space-y-3">
-                                  {selectedReport.incidents.map(
-                                    (incident, index) => (
+                                <h4 className="font-medium mb-2">Equipment</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {Object.entries(selectedReport.equipment).map(
+                                    ([key, value]) => (
                                       <div
-                                        key={index}
-                                        className="border rounded-md p-3"
+                                        key={key}
+                                        className="flex items-center gap-2"
                                       >
-                                        <p className="font-medium capitalize">
-                                          {incident.type}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                          {format(
-                                            new Date(incident.timeReported),
-                                            "PPp"
-                                          )}
-                                        </p>
-                                        <p className="mt-2">
-                                          {incident.description}
-                                        </p>
-                                        <p className="mt-1">
-                                          <span className="font-medium">
-                                            Action taken:{" "}
-                                          </span>
-                                          {incident.actionTaken}
-                                        </p>
+                                        <span
+                                          className={
+                                            value
+                                              ? "text-green-600"
+                                              : "text-red-600"
+                                          }
+                                        >
+                                          {value ? "✓" : "✗"}
+                                        </span>
+                                        <span className="capitalize">
+                                          {key
+                                            .replace(/([A-Z])/g, " $1")
+                                            .trim()}
+                                        </span>
                                       </div>
                                     )
                                   )}
                                 </div>
                               </div>
-                            )}
 
-                            {/* Responsibilities */}
-                            <div>
-                              <h4 className="font-medium mb-2">
-                                Shift Responsibilities
-                              </h4>
-                              <p className="whitespace-pre-wrap">
-                                {selectedReport.responsibilities}
-                              </p>
+                              {/* Incidents */}
+                              {selectedReport.incidents.length > 0 && (
+                                <div>
+                                  <h4 className="font-medium mb-2">
+                                    Incidents
+                                  </h4>
+                                  <div className="space-y-3">
+                                    {selectedReport.incidents.map(
+                                      (incident, index) => (
+                                        <div
+                                          key={index}
+                                          className="border rounded-md p-3"
+                                        >
+                                          <p className="font-medium capitalize">
+                                            {incident.type}
+                                          </p>
+                                          <p className="text-sm text-muted-foreground">
+                                            {format(
+                                              new Date(incident.timeReported),
+                                              "PPp"
+                                            )}
+                                          </p>
+                                          <p className="mt-2 break-words">
+                                            {incident.description}
+                                          </p>
+                                          <p className="mt-1 break-words">
+                                            <span className="font-medium">
+                                              Action taken:{" "}
+                                            </span>
+                                            {incident.actionTaken}
+                                          </p>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Responsibilities */}
+                              <div>
+                                <h4 className="font-medium mb-2">
+                                  Shift Responsibilities
+                                </h4>
+                                <p className="whitespace-pre-wrap break-words">
+                                  {selectedReport.responsibilities}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </DialogContent>
-                      )}
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                          </DialogContent>
+                        )}
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

@@ -20,27 +20,34 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full mx-auto py-12 md:py-24 lg:py-32 bg-background">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-white to-gray-50 dark:from-gray-950 dark:to-gray-900 border-b">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
-              <h1 className="text-2xl  tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl">
-                Security Daily Activity Reporting System
+              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-100 dark:via-gray-200 dark:to-gray-100 bg-clip-text text-transparent animate-gradient">
+                Security Activity Reporting System
               </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Log your activity reports with this comprehensive activity
-                reporting solution.
+              <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                Streamline your security operations with our comprehensive
+                activity reporting solution.
               </p>
             </div>
             <div className="space-x-4">
               <Link href="/reports/new">
-                <Button size="lg">
+                <Button
+                  size="lg"
+                  className="hover:scale-105 transition-transform"
+                >
                   <ClipboardList className="mr-2 h-4 w-4" />
                   New Report
                 </Button>
               </Link>
               <Link href="/reports">
-                <Button variant="outline" size="lg">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="hover:scale-105 transition-transform"
+                >
                   <Search className="mr-2 h-4 w-4" />
                   View Reports
                 </Button>
