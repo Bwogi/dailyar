@@ -144,7 +144,7 @@ export default function ActivityReportsTable() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-muted/50 transition-colors">
                 <TableHead className="whitespace-nowrap">Date</TableHead>
                 <TableHead className="whitespace-nowrap">
                   Officer Name
@@ -162,7 +162,7 @@ export default function ActivityReportsTable() {
             </TableHeader>
             <TableBody>
               {reports.length === 0 ? (
-                <TableRow>
+                <TableRow className="hover:bg-muted/50 transition-colors">
                   <TableCell
                     colSpan={7}
                     className="text-center py-8 text-muted-foreground"
@@ -172,7 +172,10 @@ export default function ActivityReportsTable() {
                 </TableRow>
               ) : (
                 reports.map((report) => (
-                  <TableRow key={report._id?.toString()}>
+                  <TableRow
+                    className="hover:bg-muted/50 transition-colors"
+                    key={report._id?.toString()}
+                  >
                     <TableCell className="whitespace-nowrap">
                       {format(new Date(report.date), "PP")}
                     </TableCell>
